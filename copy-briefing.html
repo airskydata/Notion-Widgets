@@ -1,103 +1,130 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    margin: 0;
-    padding: 14px;
-    background-color: #f1f1ef;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .content-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-  }
-  .text-line {
-    color: #37352f;
-    font-size: 14px;
-    margin: 0;
-    line-height: 1.4;
-    word-wrap: break-word;
-  }
-  .muted {
-    font-size: 13px;
-    color: #64645f;
-  }
-  .copy-btn {
-    background-color: #ffffff;
-    border: 1px solid #e2e2e2;
-    color: #37352f;
-    padding: 8px 12px;
-    font-size: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    white-space: nowrap;
-    align-self: flex-start;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  }
-  .copy-btn:hover {
-    background-color: #f7f7f5;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Airskydata — Daily Briefing Copy Button</title>
+  <style>
+    :root {
+      --bg: #f1f1ef;
+      --text: #37352f;
+      --muted: #64645f;
+      --border: #e2e2e2;
+      --btn-bg: #ffffff;
+      --btn-hover: #f7f7f5;
+
+      --ok-bg: #eaf6ec;
+      --ok-text: #2b6a3d;
+      --ok-border: #a3cfbb;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 14px;
+      background-color: var(--bg);
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: flex-start; /* TOP-LEFT */
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .copy-btn {
+      background-color: var(--btn-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      user-select: none;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--btn-hover);
+    }
+
+    .content-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .text-line {
+      color: var(--text);
+      font-size: 14px;
+      margin: 0;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .muted {
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
+  <div class="topbar">
+    <button class="copy-btn" id="copyBtn" type="button">Copy Text</button>
+  </div>
 
-<div class="content-box">
-  <p class="text-line">Good morning</p>
-  <p class="text-line">Today is <span id="currentDate" style="font-weight: 700;"></span></p>
-  <p class="text-line muted">
-    Please create a morning briefing for today using as a reference yesterday’s briefing located on Daily Briefings.
-  </p>
-</div>
+  <div class="content-box">
+    <p class="text-line">Good morning</p>
+    <p class="text-line">Today is <span id="currentDate" style="font-weight: 700;"></span></p>
+    <p class="text-line muted">
+      Please create a morning briefing for today using as a reference yesterday’s briefing located on Daily Briefings.
+    </p>
+  </div>
 
-<button class="copy-btn" id="copyBtn">Copy Text</button>
+  <script>
+    // 1) Display today's date
+    const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+    const today = new Date().toLocaleDateString("en-US", options);
+    document.getElementById("currentDate").innerText = today;
 
-<script>
-  // Date display
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const today = new Date().toLocaleDateString('en-US', options);
-  document.getElementById('currentDate').innerText = today;
-
-  // What gets copied
-  const textToCopy =
+    // 2) Text to copy (plain text only)
+    const textToCopy =
 `Good morning
 Today is ${today}
 
 Please create a morning briefing for today using as a reference yesterday’s briefing located on Daily Briefings.`;
 
-  const btn = document.getElementById('copyBtn');
+    // 3) Copy logic with visual feedback
+    const btn = document.getElementById("copyBtn");
 
-  async function copyText() {
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      btn.innerText = "Copied!";
-      btn.style.backgroundColor = "#eaf6ec";
-      btn.style.color = "#2b6a3d";
-      btn.style.borderColor = "#a3cfbb";
-      setTimeout(() => {
-        btn.innerText = "Copy Text";
-        btn.style.backgroundColor = "#ffffff";
-        btn.style.color = "#37352f";
-        btn.style.borderColor = "#e2e2e2";
-      }, 1500);
-    } catch (e) {
-      btn.innerText = "Copy failed";
-      setTimeout(() => (btn.innerText = "Copy Text"), 1500);
+    async function copyText() {
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+
+        btn.innerText = "Copied!";
+        btn.style.backgroundColor = "var(--ok-bg)";
+        btn.style.color = "var(--ok-text)";
+        btn.style.borderColor = "var(--ok-border)";
+
+        setTimeout(() => {
+          btn.innerText = "Copy Text";
+          btn.style.backgroundColor = "var(--btn-bg)";
+          btn.style.color = "var(--text)";
+          btn.style.borderColor = "var(--border)";
+        }, 1500);
+      } catch (e) {
+        btn.innerText = "Copy failed";
+        setTimeout(() => (btn.innerText = "Copy Text"), 1500);
+      }
     }
-  }
 
-  btn.addEventListener('click', copyText);
-</script>
-
+    btn.addEventListener("click", copyText);
+  </script>
 </body>
 </html>
