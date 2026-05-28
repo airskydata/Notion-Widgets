@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Airskydata — Daily Briefing Copy Button</title>
+  <title>Airskydata — Daily Briefing Copy</title>
   <style>
     :root {
       --bg: #f1f1ef;
@@ -16,6 +16,10 @@
       --ok-bg: #eaf6ec;
       --ok-text: #2b6a3d;
       --ok-border: #a3cfbb;
+
+      --err-bg: #fdebec;
+      --err-text: #8a1f2b;
+      --err-border: #f5c2c7;
     }
 
     body {
@@ -29,7 +33,7 @@
 
     .topbar {
       display: flex;
-      justify-content: flex-start; /* TOP-LEFT */
+      justify-content: flex-start;
       align-items: center;
       margin-bottom: 10px;
     }
@@ -48,9 +52,7 @@
       user-select: none;
     }
 
-    .copy-btn:hover {
-      background-color: var(--btn-hover);
-    }
+    .copy-btn:hover { background-color: var(--btn-hover); }
 
     .content-box {
       display: flex;
@@ -67,9 +69,17 @@
       word-wrap: break-word;
     }
 
-    .muted {
-      font-size: 13px;
-      color: var(--muted);
+    .muted { font-size: 13px; color: var(--muted); }
+
+    /* hidden textarea for fallback copy */
+    textarea#copyArea {
+      position: fixed;
+      top: -1000px;
+      left: -1000px;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -87,40 +97,85 @@
     </p>
   </div>
 
+  <textarea id="copyArea" aria-hidden="true"></textarea>
+
   <script>
-    // 1) Display today's date
+    // Date display
     const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
     const today = new Date().toLocaleDateString("en-US", options);
     document.getElementById("currentDate").innerText = today;
 
-    // 2) Text to copy (plain text only)
+    // Plain text to copy
     const textToCopy =
 `Good morning
 Today is ${today}
 
 Please create a morning briefing for today using as a reference yesterday’s briefing located on Daily Briefings.`;
 
-    // 3) Copy logic with visual feedback
     const btn = document.getElementById("copyBtn");
+    const copyArea = document.getElementById("copyArea");
 
-    async function copyText() {
-      try {
-        await navigator.clipboard.writeText(textToCopy);
+    function setBtnState(type, label) {
+      btn.innerText = label;
 
-        btn.innerText = "Copied!";
+      if (type === "ok") {
         btn.style.backgroundColor = "var(--ok-bg)";
         btn.style.color = "var(--ok-text)";
         btn.style.borderColor = "var(--ok-border)";
+      } else if (type === "err") {
+        btn.style.backgroundColor = "var(--err-bg)";
+        btn.style.color = "var(--err-text)";
+        btn.style.borderColor = "var(--err-border)";
+      } else {
+        btn.style.backgroundColor = "var(--btn-bg)";
+        btn.style.color = "var(--text)";
+        btn.style.borderColor = "var(--border)";
+      }
+    }
 
-        setTimeout(() => {
-          btn.innerText = "Copy Text";
-          btn.style.backgroundColor = "var(--btn-bg)";
-          btn.style.color = "var(--text)";
-          btn.style.borderColor = "var(--border)";
-        }, 1500);
+    async function modernClipboardCopy(text) {
+      // May fail in iframes / without permissions
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+
+    function legacyCopy(text) {
+      // Works in more embedded contexts
+      copyArea.value = text;
+      copyArea.focus();
+      copyArea.select();
+      try {
+        return document.execCommand("copy");
       } catch (e) {
-        btn.innerText = "Copy failed";
-        setTimeout(() => (btn.innerText = "Copy Text"), 1500);
+        return false;
+      }
+    }
+
+    async function copyText() {
+      try {
+        // Try modern API first (best UX)
+        if (navigator.clipboard && window.isSecureContext) {
+          await modernClipboardCopy(textToCopy);
+          setBtnState("ok", "Copied!");
+        } else {
+          // Fallback
+          const ok = legacyCopy(textToCopy);
+          if (!ok) throw new Error("Legacy copy failed");
+          setBtnState("ok", "Copied!");
+        }
+
+        setTimeout(() => setBtnState("idle", "Copy Text"), 1500);
+      } catch (e) {
+        // Try legacy fallback if modern fails
+        const ok = legacyCopy(textToCopy);
+        if (ok) {
+          setBtnState("ok", "Copied!");
+          setTimeout(() => setBtnState("idle", "Copy Text"), 1500);
+          return;
+        }
+
+        setBtnState("err", "Copy failed");
+        setTimeout(() => setBtnState("idle", "Copy Text"), 1500);
       }
     }
 
