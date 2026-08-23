@@ -1,0 +1,18 @@
+{
+  "appId": null,
+  "name": "Notion Widgets",
+  "repo": "Notion-Widgets",
+  "platform": null,
+  "category": null,
+  "criticality": null,
+  "dataClass": null,
+  "retention": {},
+  "integrity": false,
+  "thirdPartyPersonalData": false,
+  "registerStatus": "sandbox",
+  "versionDisplay": null,
+  "tagFamilies": [],
+  "kvNamespaces": [],
+  "credentials": [],
+  "governingPage": null
+}
